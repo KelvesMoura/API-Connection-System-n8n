@@ -1,0 +1,1266 @@
+{
+  "name": "Conexão_API's_ON",
+  "nodes": [
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Gerador de QR Code</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            height: 100vh;\n            margin: 0;\n            background-color: #f0f0f0;\n        }\n        .container {\n            background-color: white;\n            padding: 2rem;\n            border-radius: 8px;\n            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);\n            text-align: center;\n        }\n        input {\n            width: 100%;\n            padding: 0.5rem;\n            margin-bottom: 1rem;\n            border: 1px solid #ccc;\n            border-radius: 4px;\n        }\n        button {\n            background-color: #4CAF50;\n            color: white;\n            border: none;\n            padding: 0.5rem 1rem;\n            border-radius: 4px;\n            cursor: pointer;\n        }\n        button:hover {\n            background-color: #45a049;\n        }\n        button:disabled {\n            background-color: #cccccc;\n            cursor: not-allowed;\n        }\n        #qrcode {\n            margin-top: 1rem;\n        }\n        #timer {\n            margin-top: 1rem;\n            font-weight: bold;\n        }\n        .loader {\n            border: 5px solid #f3f3f3;\n            border-top: 5px solid #3498db;\n            border-radius: 50%;\n            width: 50px;\n            height: 50px;\n            animation: spin 1s linear infinite;\n            margin: 20px auto;\n            display: none;\n        }\n        @keyframes spin {\n            0% { transform: rotate(0deg); }\n            100% { transform: rotate(360deg); }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>Gerador de QR Code</h1>\n        <input type=\"text\" id=\"instanceName\" placeholder=\"Nome da instância\">\n        <button id=\"generateButton\" onclick=\"generateQRCode()\">Gerar QR Code</button>\n        <div id=\"loader\" class=\"loader\"></div>\n        <div id=\"qrcode\"></div>\n        <div id=\"timer\"></div>\n    </div>\n\n    <script>\n        let timerInterval;\n        let timeLeft = 30;\n        let currentInstanceName = '';\n\n        async function generateQRCode() {\n            const instanceName = document.getElementById('instanceName').value;\n            if (!instanceName) {\n                alert('Por favor, insira o nome da instância.');\n                return;\n            }\n\n            currentInstanceName = instanceName;\n            await fetchAndDisplayQRCode(instanceName, true);\n\n            // Reset and start the timer\n            clearInterval(timerInterval);\n            timeLeft = 30;\n            updateTimer();\n            timerInterval = setInterval(updateTimer, 1000);\n        }\n\n        async function fetchAndDisplayQRCode(instanceName, isInitial = false) {\n            const loader = document.getElementById('loader');\n            const generateButton = document.getElementById('generateButton');\n            const qrcodeElement = document.getElementById('qrcode');\n\n            loader.style.display = 'block';\n            generateButton.disabled = true;\n            qrcodeElement.innerHTML = '';\n\n            try {\n                const endpoint = isInitial \n                    ? 'https://webhook.kmsystem.site/webhook/criar-instancia-v2'\n                    : 'https://webhook.kmsystem.site/webhook/atualizar-qr-code-v2';\n\n                const response = await fetch(endpoint, {\n                    method: 'POST',\n                    headers: {\n                        'Content-Type': 'application/json',\n                    },\n                    body: JSON.stringify({ instanceName: instanceName }),\n                });\n\n                if (!response.ok) {\n                    throw new Error('Erro na resposta do servidor');\n                }\n\n                // Verifica o tipo de conteúdo da resposta\n                const contentType = response.headers.get('content-type');\n\n                let imgSrc;\n                if (contentType && contentType.includes('application/json')) {\n                    // Se for JSON, assume que é uma string base64\n                    const data = await response.json();\n                    imgSrc = `data:image/png;base64,${data.qrCodeBase64}`;\n                } else {\n                    // Se não for JSON, assume que é um arquivo binário\n                    const blob = await response.blob();\n                    imgSrc = URL.createObjectURL(blob);\n                }\n\n                // Exibe o QR code\n                qrcodeElement.innerHTML = `<img src=\"${imgSrc}\" alt=\"QR Code\">`;\n            } catch (error) {\n                console.error('Erro ao gerar QR code:', error);\n                alert('Erro ao gerar QR code. Por favor, tente novamente.');\n            } finally {\n                loader.style.display = 'none';\n                generateButton.disabled = false;\n            }\n        }\n\n        async function updateQRCode() {\n            if (currentInstanceName) {\n                await fetchAndDisplayQRCode(currentInstanceName);\n            }\n        }\n\n        function updateTimer() {\n            const timerElement = document.getElementById('timer');\n            timerElement.textContent = `Novo QR Code em: ${timeLeft}s`;\n\n            if (timeLeft === 0) {\n                clearInterval(timerInterval);\n                updateQRCode();\n                timeLeft = 30;\n                timerInterval = setInterval(updateTimer, 1000);\n            } else {\n                timeLeft--;\n            }\n        }\n    </script>\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        680,
+        -80
+      ],
+      "id": "1d898110-a11a-4518-a52e-5647bbbd4c68",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        -80
+      ],
+      "id": "cdb3381f-3633-425b-a890-95aa28de8b2f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "path": "apiv2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        460,
+        -80
+      ],
+      "id": "ad85b5b9-4abb-4c1a-bab7-3d4782e953eb",
+      "name": "Pagina do QR code",
+      "webhookId": "cce5e6b5-f99a-48a3-8b18-cf524f03c4ce"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        200
+      ],
+      "id": "561836cc-7067-4c68-b552-2126c86d42f6",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        200
+      ],
+      "id": "063222e8-6e8d-46a5-9b1a-984c60dcee55",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7997d699-2380-48aa-8dc3-b1eac974e16e",
+              "name": "base64",
+              "value": "={{ $('Create').item.json.qrcode.base64.split(',').last() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        200
+      ],
+      "id": "2133d3f0-f677-410c-a2f0-868d431d7df8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "criar-instancia-v2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        460,
+        200
+      ],
+      "id": "01f83fa9-2060-4bf6-bff0-53a212fd0db8",
+      "name": "Create Instance",
+      "webhookId": "f3988766-f52b-4be0-b0bd-254e485671a3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://whatsappv2.kmsystem.site/instance/create",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "4mebek31b3nisjxmy6avc0o17wy56p4m"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "instanceName",
+              "value": "={{ $json.body.instanceName }}"
+            },
+            {
+              "name": "qrcode",
+              "value": true
+            },
+            {
+              "name": "integration",
+              "value": "WHATSAPP-BAILEYS"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        200
+      ],
+      "id": "a96a7e18-b303-4115-9f08-754801c1d639",
+      "name": "Create"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "atualizar-qr-code-v2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        440,
+        860
+      ],
+      "id": "8da5fbbc-751d-4f09-912a-3f4347efa53f",
+      "name": "Atualiza qr code",
+      "webhookId": "f3988766-f52b-4be0-b0bd-254e485671a3"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1060,
+        860
+      ],
+      "id": "f4a74409-ec7f-43e2-a97e-f9882942b999",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7997d699-2380-48aa-8dc3-b1eac974e16e",
+              "name": "base64",
+              "value": "={{ $json.base64.split(',').last() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        860,
+        860
+      ],
+      "id": "87145a45-ffbc-4da0-a678-c9744fceefdc",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "url": "=https://whatsappv2.kmsystem.site/instance/connect/{{ $json.body.instanceName }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "4mebek31b3nisjxmy6avc0o17wy56p4m"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        860
+      ],
+      "id": "c39dad60-e9c4-4390-b9a1-ad5f725225de",
+      "name": "Connect"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        860
+      ],
+      "id": "b1c5ec16-55a4-4724-b363-ae7c8f905701",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5b8da4fe-ba00-45f1-8b15-2e3b607de5d6",
+              "leftValue": "={{ $json.instance.instanceName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        480
+      ],
+      "id": "f98bb03d-9eb2-4ae7-af8e-1e952416fe66",
+      "name": "Validate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://whatsapp.kmsystem.site/message/sendText/Alert_Robot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "4mebek31b3nisjxmy6avc0o17wy56p4m"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "5516992464388"
+            },
+            {
+              "name": "textMessage.text",
+              "value": "=*ALERT*\n\nUma nova instância foi criada na API_v2.2.2\n\nInstância: *{{ $json.instance.instanceName }}*"
+            },
+            {
+              "name": "options.delay",
+              "value": "={{ 1200 }}"
+            },
+            {
+              "name": "options.presence",
+              "value": "composing"
+            },
+            {
+              "name": "options.linkPreview",
+              "value": "={{ false }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        480
+      ],
+      "id": "9e1aca59-d686-4f56-bb23-6f980c1f66ab",
+      "name": "Send Text"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1300,
+        460
+      ],
+      "id": "73849cd8-73d6-4923-8f1c-66fc05c7098e",
+      "name": "Loop Messages"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1780,
+        480
+      ],
+      "id": "70e22dad-e489-4c68-8b3f-9ef61d60f91b",
+      "name": "Wait 2s_2",
+      "webhookId": "a554970a-71d0-4032-a622-8b53ed832d4c"
+    },
+    {
+      "parameters": {
+        "content": "## Landing Page\n",
+        "height": 260,
+        "width": 720
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -160
+      ],
+      "id": "3b4328da-e05a-4700-a671-71a14da2eff2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Crianda Instância\n",
+        "height": 580,
+        "width": 1580
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        140
+      ],
+      "id": "ebe2b6e3-6493-4c7f-83d7-580509551bab",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Crianda QRcode\n",
+        "height": 300,
+        "width": 1100
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        760
+      ],
+      "id": "7502cbd9-5142-417b-a1b6-dfc5f34a0867",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Notificação Alert Robot",
+        "height": 300,
+        "width": 1120,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        840,
+        400
+      ],
+      "id": "42d8ace8-f296-49f4-91f5-7af511e897b6",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## API Whatsapp v2.2.2\n",
+        "height": 1340,
+        "width": 1660,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        360,
+        -240
+      ],
+      "id": "b6ce7944-9fe7-4a14-bc09-565be85bb849",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Gerador de QR Code</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            height: 100vh;\n            margin: 0;\n            background-color: #f0f0f0;\n        }\n        .container {\n            background-color: white;\n            padding: 2rem;\n            border-radius: 8px;\n            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);\n            text-align: center;\n        }\n        input {\n            width: 100%;\n            padding: 0.5rem;\n            margin-bottom: 1rem;\n            border: 1px solid #ccc;\n            border-radius: 4px;\n        }\n        button {\n            background-color: #4CAF50;\n            color: white;\n            border: none;\n            padding: 0.5rem 1rem;\n            border-radius: 4px;\n            cursor: pointer;\n        }\n        button:hover {\n            background-color: #45a049;\n        }\n        button:disabled {\n            background-color: #cccccc;\n            cursor: not-allowed;\n        }\n        #qrcode {\n            margin-top: 1rem;\n        }\n        #timer {\n            margin-top: 1rem;\n            font-weight: bold;\n        }\n        .loader {\n            border: 5px solid #f3f3f3;\n            border-top: 5px solid #3498db;\n            border-radius: 50%;\n            width: 50px;\n            height: 50px;\n            animation: spin 1s linear infinite;\n            margin: 20px auto;\n            display: none;\n        }\n        @keyframes spin {\n            0% { transform: rotate(0deg); }\n            100% { transform: rotate(360deg); }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>Gerador de QR Code</h1>\n        <input type=\"text\" id=\"instanceName\" placeholder=\"Nome da instância\">\n        <button id=\"generateButton\" onclick=\"generateQRCode()\">Gerar QR Code</button>\n        <div id=\"loader\" class=\"loader\"></div>\n        <div id=\"qrcode\"></div>\n        <div id=\"timer\"></div>\n    </div>\n\n    <script>\n        let timerInterval;\n        let timeLeft = 30;\n        let currentInstanceName = '';\n\n        async function generateQRCode() {\n            const instanceName = document.getElementById('instanceName').value;\n            if (!instanceName) {\n                alert('Por favor, insira o nome da instância.');\n                return;\n            }\n\n            currentInstanceName = instanceName;\n            await fetchAndDisplayQRCode(instanceName, true);\n\n            // Reset and start the timer\n            clearInterval(timerInterval);\n            timeLeft = 30;\n            updateTimer();\n            timerInterval = setInterval(updateTimer, 1000);\n        }\n\n        async function fetchAndDisplayQRCode(instanceName, isInitial = false) {\n            const loader = document.getElementById('loader');\n            const generateButton = document.getElementById('generateButton');\n            const qrcodeElement = document.getElementById('qrcode');\n\n            loader.style.display = 'block';\n            generateButton.disabled = true;\n            qrcodeElement.innerHTML = '';\n\n            try {\n                const endpoint = isInitial \n                    ? 'https://webhook.kmsystem.site/webhook/criar-instancia-v1-8'\n                    : 'https://webhook.kmsystem.site/webhook/atualizar-qr-code-v1-8';\n\n                const response = await fetch(endpoint, {\n                    method: 'POST',\n                    headers: {\n                        'Content-Type': 'application/json',\n                    },\n                    body: JSON.stringify({ instanceName: instanceName }),\n                });\n\n                if (!response.ok) {\n                    throw new Error('Erro na resposta do servidor');\n                }\n\n                // Verifica o tipo de conteúdo da resposta\n                const contentType = response.headers.get('content-type');\n\n                let imgSrc;\n                if (contentType && contentType.includes('application/json')) {\n                    // Se for JSON, assume que é uma string base64\n                    const data = await response.json();\n                    imgSrc = `data:image/png;base64,${data.qrCodeBase64}`;\n                } else {\n                    // Se não for JSON, assume que é um arquivo binário\n                    const blob = await response.blob();\n                    imgSrc = URL.createObjectURL(blob);\n                }\n\n                // Exibe o QR code\n                qrcodeElement.innerHTML = `<img src=\"${imgSrc}\" alt=\"QR Code\">`;\n            } catch (error) {\n                console.error('Erro ao gerar QR code:', error);\n                alert('Erro ao gerar QR code. Por favor, tente novamente.');\n            } finally {\n                loader.style.display = 'none';\n                generateButton.disabled = false;\n            }\n        }\n\n        async function updateQRCode() {\n            if (currentInstanceName) {\n                await fetchAndDisplayQRCode(currentInstanceName);\n            }\n        }\n\n        function updateTimer() {\n            const timerElement = document.getElementById('timer');\n            timerElement.textContent = `Novo QR Code em: ${timeLeft}s`;\n\n            if (timeLeft === 0) {\n                clearInterval(timerInterval);\n                updateQRCode();\n                timeLeft = 30;\n                timerInterval = setInterval(updateTimer, 1000);\n            } else {\n                timeLeft--;\n            }\n        }\n    </script>\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -1100,
+        -80
+      ],
+      "id": "5c1dbeda-e86a-45c4-b398-aa3f6c33401b",
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        -80
+      ],
+      "id": "f2ea9b1e-b103-4838-bedc-0c839f54dfa3",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "path": "apiv1-8",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1320,
+        -80
+      ],
+      "id": "10ee6db5-4d77-42a9-977d-c77845e6d663",
+      "name": "Pagina do QR code1",
+      "webhookId": "cce5e6b5-f99a-48a3-8b18-cf524f03c4ce"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        200
+      ],
+      "id": "87db60db-1ca0-46e8-81aa-054f42e185d0",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -700,
+        200
+      ],
+      "id": "b3597325-09f3-4d8c-b8f5-919b88b3eef7",
+      "name": "Convert to File2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7997d699-2380-48aa-8dc3-b1eac974e16e",
+              "name": "base64",
+              "value": "={{ $('Create1').item.json.qrcode.base64.split(',').last() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -900,
+        200
+      ],
+      "id": "b5307497-e40f-4c72-a3a4-6df89d989eb1",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "criar-instancia-v1-8",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1320,
+        200
+      ],
+      "id": "0f79a1b4-a631-472f-95bd-598409849f5d",
+      "name": "Create Instance1",
+      "webhookId": "f3988766-f52b-4be0-b0bd-254e485671a3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://whatsapp.kmsystem.site/instance/create",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "4mebek31b3nisjxmy6avc0o17wy56p4m"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "instanceName",
+              "value": "={{ $json.body.instanceName }}"
+            },
+            {
+              "name": "qrcode",
+              "value": "={{true}}"
+            },
+            {
+              "name": "integration",
+              "value": "WHATSAPP-BAILEYS"
+            },
+            {
+              "name": "mobile",
+              "value": "={{false }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1100,
+        200
+      ],
+      "id": "ad3fc946-55ab-4386-9107-6583d038b46c",
+      "name": "Create1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "atualizar-qr-code-v1-8",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1340,
+        860
+      ],
+      "id": "52377e67-89f2-422b-bc10-0aa4fd9b6e2c",
+      "name": "Atualiza qr code1",
+      "webhookId": "f3988766-f52b-4be0-b0bd-254e485671a3"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        860
+      ],
+      "id": "3df70e52-10d0-4f6f-beb2-ebb5d618cf81",
+      "name": "Convert to File3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7997d699-2380-48aa-8dc3-b1eac974e16e",
+              "name": "base64",
+              "value": "={{ $json.base64.split(',').last() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -920,
+        860
+      ],
+      "id": "be000ecf-3834-48af-bf8e-caf7aa106933",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "url": "=https://whatsapp.kmsystem.site/instance/connect/{{ $json.body.instanceName }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "4mebek31b3nisjxmy6avc0o17wy56p4m"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1120,
+        860
+      ],
+      "id": "273ac688-23db-4739-b73b-ab1c63717151",
+      "name": "Connect1"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -500,
+        860
+      ],
+      "id": "4e62fe07-6c2a-4c8a-a3d3-db75b01cd4e0",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5b8da4fe-ba00-45f1-8b15-2e3b607de5d6",
+              "leftValue": "={{ $json.instance.instanceName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -900,
+        480
+      ],
+      "id": "9f73bf8a-c6ee-4975-8199-b3f68db945e4",
+      "name": "Validate1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://whatsapp.kmsystem.site/message/sendText/Alert_Robot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "4mebek31b3nisjxmy6avc0o17wy56p4m"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "5516992464388"
+            },
+            {
+              "name": "textMessage.text",
+              "value": "=*ALERT*\n\nUma nova instância foi criada na API_v1.8.5\n\nInstância: *{{ $json.instance.instanceName }}*"
+            },
+            {
+              "name": "options.delay",
+              "value": "={{ 1200 }}"
+            },
+            {
+              "name": "options.presence",
+              "value": "composing"
+            },
+            {
+              "name": "options.linkPreview",
+              "value": "={{ false }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        480
+      ],
+      "id": "d0d4cdcc-853e-4a28-b50a-e849088aaad1",
+      "name": "Send Text1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        460
+      ],
+      "id": "82f40ab9-f304-48a2-b8f4-f0ba061c1a38",
+      "name": "Loop Messages1"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        480
+      ],
+      "id": "13e96e59-6bab-4214-b671-34a0efaf6d5f",
+      "name": "Wait 2s_",
+      "webhookId": "a554970a-71d0-4032-a622-8b53ed832d4c"
+    },
+    {
+      "parameters": {
+        "content": "## Landing Page\n",
+        "height": 260,
+        "width": 720
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1380,
+        -160
+      ],
+      "id": "a20d59bd-813d-40f3-b061-852b04f72735",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Crianda Instância\n",
+        "height": 580,
+        "width": 1580
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1380,
+        140
+      ],
+      "id": "3fb33067-4d18-4c35-a67b-ca4543d449d6",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Crianda QRcode\n",
+        "height": 300,
+        "width": 1100
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1380,
+        760
+      ],
+      "id": "337c0a1f-c43d-410b-9bab-349f07f418e3",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Notificação Alert Robot",
+        "height": 300,
+        "width": 1120,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -940,
+        400
+      ],
+      "id": "ea55074b-3997-49a4-9279-6287a3228dcf",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## API Whatsapp v1.8.5\n",
+        "height": 1340,
+        "width": 1660,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1420,
+        -240
+      ],
+      "id": "62bceace-ae6d-4da4-8ce3-3190aa038c65",
+      "name": "Sticky Note9"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pagina do QR code": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Instance": {
+      "main": [
+        [
+          {
+            "node": "Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        []
+      ]
+    },
+    "Atualiza qr code": {
+      "main": [
+        [
+          {
+            "node": "Connect",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Connect": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook2": {
+      "main": [
+        []
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Loop Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Text": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s_2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Messages": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s_2": {
+      "main": [
+        [
+          {
+            "node": "Loop Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pagina do QR code1": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Instance1": {
+      "main": [
+        [
+          {
+            "node": "Create1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create1": {
+      "main": [
+        [
+          {
+            "node": "Validate1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza qr code1": {
+      "main": [
+        [
+          {
+            "node": "Connect1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Convert to File3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Connect1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate1": {
+      "main": [
+        [
+          {
+            "node": "Loop Messages1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Text1": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s_",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Messages1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s_": {
+      "main": [
+        [
+          {
+            "node": "Loop Messages1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "14ec935a-efed-48f5-83de-f5b4ccaaf3ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ac6730a2ae3fb61d87e6d070630ea7f5cf8e5e739e42ff74046d2cd1904ce61c"
+  },
+  "id": "4TbTKgXlwdUo9f5R",
+  "tags": [
+    {
+      "createdAt": "2025-03-04T19:18:47.597Z",
+      "updatedAt": "2025-03-04T19:18:47.597Z",
+      "id": "wfmlgVlEaQPFuJEZ",
+      "name": "System"
+    }
+  ]
+}
