@@ -1,12 +1,13 @@
 # 🔗 API Connection System
 
 ## 📌 Project Overview
+
 This project facilitates seamless **WhatsApp API** integration, enabling automated instance creation, QR code generation, and communication handling. It is built using **n8n**, **WhatsApp API**, and **Webhook services** for efficient interaction.
 
-
-![alt text](Project\Image.png)
+![alt text](Project/Image.png)
 
 ## 🚀 Features
+
 - 📲 **WhatsApp Integration**: Creates and manages WhatsApp API instances.
 - 🔐 **QR Code Generation**: Generates QR codes for authentication.
 - 🔄 **Instance Management**: Supports creating and updating API instances.
@@ -14,15 +15,18 @@ This project facilitates seamless **WhatsApp API** integration, enabling automat
 - 📢 **Alert Notifications**: Sends automated alerts on instance creation.
 
 ## 🛠 Technologies Used
+
 - **n8n**: Workflow automation tool.
 - **WhatsApp API**: Manages WhatsApp messaging services.
 - **Webhook Services**: Handles real-time communication.
 - **JavaScript/HTML**: Custom interface for QR code generation.
 
 ## 📁 File Descriptions
+
 - **Conexao_API_s_v1_ON.json**: Contains workflows for API connection, QR code management, and instance updates.
 
 ## 🔧 How It Works
+
 1. 📩 **Webhook Activation**: Listens for API requests.
 2. 🏗 **Instance Creation**: Sets up a new WhatsApp API instance.
 3. 🔄 **QR Code Generation**: Provides authentication for connection.
@@ -31,6 +35,7 @@ This project facilitates seamless **WhatsApp API** integration, enabling automat
 6. 🔄 **Instance Updates**: Refreshes QR codes periodically.
 
 ## 📌 Installation & Setup
+
 1. Clone the repository.
 2. Install **n8n** and required dependencies.
 3. Configure API keys for WhatsApp API and webhook services.
@@ -38,6 +43,7 @@ This project facilitates seamless **WhatsApp API** integration, enabling automat
 5. Start the n8n server and activate the workflows.
 
 ## 🛠 Configuration
+
 - **.env** file should include:
   ```env
   WHATSAPP_API_KEY=your_api_key
@@ -46,5 +52,5 @@ This project facilitates seamless **WhatsApp API** integration, enabling automat
   ```
 
 ## 📞 Support
-For any questions or issues, please contact the development team. Happy automating! 🤖
 
+For any questions or issues, please contact the development team. Happy automating! 🤖
